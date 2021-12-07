@@ -19,6 +19,8 @@ export function SubscribeButton({ priceId }: SubscribeButtonProps) {
             return
         }
         if (data.activeSubscription) {
+            console.log('Usuário já tem uma assinatura ativa')
+            
             router.push('/posts')
             return
         }

@@ -5,12 +5,8 @@ import { fauna } from '../../services/fauna'
 import { stripe } from '../../services/stripe'
 
 type User = {
-    ref: {
-        id: string
-    }
-    data: {
-        stripe_customer_id: string;
-    }
+    ref: { id: string }
+    data: { stripe_customer_id: string }
 }
 
 // eslint-disable-next-line import/no-anonymous-default-export
@@ -20,7 +16,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         if (!session?.user?.email) return false
 
-        //console.info('session:::::::', session)
+        // console.info('session:::::::', session)
 
         const user = await fauna.query<User>(
             q.Get(
@@ -35,7 +31,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         if(!customerId) {
             const stripeCustomer = await stripe.customers.create({
-                email: String(session?.user?.email)
+                email: String(session.user.email)
             })
 
             await fauna.query(
@@ -64,8 +60,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             ],
             mode: 'subscription',
             allow_promotion_codes: true,
-            success_url: process.env.STRIPE_SUCCESS_URL ?? 'http://localhost:3000/404',
-            cancel_url: process.env.STRIPE_CANCEL_URL ?? 'http://localhost:3000/404'
+            success_url: process.env.STRIPE_SUCCESS_URL as string,
+            cancel_url: process.env.STRIPE_CANCEL_URL as string
         })
 
         return res.status(200).json({ sessionId: stripeCheckoutSession.id })

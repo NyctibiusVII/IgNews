@@ -4,6 +4,8 @@ import { fauna } from '../../../services/fauna'
 import NextAuth from 'next-auth'
 import GithubProvider from 'next-auth/providers/github'
 
+interface QueryType extends Object { data: { status: Object } }
+
 export default NextAuth({
     providers: [
         GithubProvider({
@@ -13,9 +15,9 @@ export default NextAuth({
         }),
     ],
     callbacks: {/*
-        async session({session}) {
+        async session({ session }) {
             try {
-                const userActiveSubscription = await fauna.query(
+                const userActiveSubscription = await fauna.query<QueryType>(
                     q.Get(
                         q.Intersection([
                             q.Match(q.Index('subscription_by_user_ref')),
@@ -24,14 +26,50 @@ export default NextAuth({
                     )
                 )
 
-                /**
+                console.log('userACTIVE?:::::::', userActiveSubscription)
+
+                / **
                  * @todo Verificar se membro é ativo diretamente na consulta do banco de dados
-                 *
+                 * /
                 if (userActiveSubscription['data']['status'] === 'active') {
                     return {
                         ...session,
                         activeSubscription: userActiveSubscription
                     }
+                } else {
+                    return {
+                        ...session,
+                        activeSubscription: null
+                    }
+                }
+            } catch (err) {
+                console.log('userACTIVE?:::::::', err)
+                return {
+                    ...session,
+                    activeSubscription: null
+                }
+            }
+        },*/
+        async session({ session }) {
+            try {
+                const userActiveSubscription = await fauna.query(
+                    q.Get(
+                        q.Intersection([
+                            q.Match(q.Index('subscription_by_user_ref')),
+                            q.Select(
+                                'ref',
+                                q.Get(
+                                    q.Match(q.Index('user_by_email'), q.Casefold(!!session?.user?.email)),
+                                )
+                            ),
+                            q.Match(q.Index('subscription_by_status'), 'active'),
+                        ])
+                    )
+                )
+
+                return {
+                    ...session,
+                    activeSubscription: userActiveSubscription
                 }
             } catch (err) {
                 return {
@@ -39,7 +77,7 @@ export default NextAuth({
                     activeSubscription: null
                 }
             }
-        },*/
+        },
         async signIn({ user, account, profile }) {
             const { email } = user
 
@@ -68,8 +106,9 @@ export default NextAuth({
                         )
                     )
                 )
+
                 return true
-            } catch (err) { console.log(err); return false }
-        },
+            } catch (err) { console.error(err); return false }
+        }
     }
 })

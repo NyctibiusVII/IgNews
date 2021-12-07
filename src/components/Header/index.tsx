@@ -1,9 +1,11 @@
 import { SignInButton } from '../SignInButton'
+import { ActiveLink }   from '../ActiveLink'
 
 import logoImage from '../../../public/images/logo.svg'
 
-import Link from 'next/link'
+import Link  from 'next/link'
 import Image from 'next/image'
+
 import styles from './styles.module.scss'
 
 export function Header() {
@@ -20,14 +22,14 @@ export function Header() {
                 <nav>
                     <ul>
                         <li>
-                            <Link href="/">
-                                <a className={styles.active}>Home</a>
-                            </Link>
+                            <ActiveLink activeClassName={styles.active} href="/">
+                                <a>Home</a>
+                            </ActiveLink>
                         </li>
                         <li>
-                            <Link href="/posts">
+                            <ActiveLink activeClassName={styles.active} href="/posts">
                                 <a>Posts</a>
-                            </Link>
+                            </ActiveLink>
                         </li>
                     </ul>
                 </nav>

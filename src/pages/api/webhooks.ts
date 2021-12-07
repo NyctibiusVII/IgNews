@@ -5,6 +5,11 @@ import { stripe }           from '../../services/stripe'
 import { Readable }         from 'stream'
 import Stripe from 'stripe'
 
+interface CheckoutSession extends Stripe.Checkout.Session {
+    subscription: string
+    customer: string
+}
+
 async function buffer(readable: Readable) {
     const chunks = []
 
@@ -29,12 +34,12 @@ export const config = { api: { bodyParser: false } }
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === 'POST') {
         const buf = await buffer(req)
-        const secret = req.headers['stripe-signature'] ?? 'Error: "secret" variable => undefined'
+        const secret = req.headers['stripe-signature'] as string
 
         let event: Stripe.Event
 
         try {
-            event = stripe.webhooks.constructEvent(buf, secret, process.env.STRIPE_WEBHOOK_SECRET ?? 'Error: STRIPE_WEBHOOK_SECRET => undefined')
+            event = stripe.webhooks.constructEvent(buf, secret, process.env.STRIPE_WEBHOOK_SECRET as string)
         } catch (err) { return res.status(400).send(`Webhook error: ${err}`) }
 
         const { type } = event
@@ -54,10 +59,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
                         break
                     case 'checkout.session.completed':
-                        interface CheckoutSession extends Stripe.Checkout.Session {
-                            subscription: string
-                            customer: string
-                        }
                         const checkoutSession = event.data.object as CheckoutSession // Fiz gambiarra para o typescript não dar pau. Era para ser 'Stripe.Checkout.Session' em vez de 'CheckoutSession'.
 
                         await saveSubscription(
