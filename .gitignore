@@ -15,6 +15,7 @@
 
 # production
 /build
+stripe.exe
 
 # misc
 .DS_Store
